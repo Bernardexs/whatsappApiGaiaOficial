@@ -7,7 +7,6 @@ const body_parser = require('body-parser')
 const https = require('https')
 const fs = require('fs')
 const http = require('http')
-const cron = require('node-cron')
 require('dotenv').config()
 
 const app = express().use(body_parser.json()) // Creates express http server

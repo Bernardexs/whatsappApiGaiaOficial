@@ -7,7 +7,6 @@ const body_parser = require('body-parser')
 const https = require('https')
 const fs = require('fs')
 const http = require('http')
-const cron = require('node-cron')
 require('dotenv').config()
 
 const app = express().use(body_parser.json()) // Creates express http server
@@ -245,7 +244,7 @@ app.get('/webhook', (req, res) => {
 
 
 // --- CRON para recordatorios cada hora ---
-cron.schedule('0 * * * *', async () => {
+/*cron.schedule('0 * * * *', async () => {
   console.log('⏰ Ejecutando recordatorio automático...');
   try {
     const response = await axios.get(`http://localhost:${process.env.PORT}/enviar-recordatorios-unicos`);
@@ -253,4 +252,4 @@ cron.schedule('0 * * * *', async () => {
   } catch (error) {
     console.error('❌ Error ejecutando cron:', error.message);
   }
-});
+});*

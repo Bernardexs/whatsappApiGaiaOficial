@@ -99,7 +99,7 @@ sqlController.ENVIAR_RECORDATORIO = async (idEncuesta) => {
     console.error('❌ Error en ENVIAR_RECORDATORIO:', err);
     await sql.close();
     return [];
-  } 
+  }
 };
 
 sqlController.OBTENER_CONTACTOS_PARA_RECORDATORIO = async () => {
