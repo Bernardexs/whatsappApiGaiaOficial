@@ -23,15 +23,19 @@ const configFile = require('./config/config.js');
 const sqlController = require('./sqlController.js');
 
 // ✅ Importación correcta del handler global desde otro proyecto (usando .cjs para CommonJS)
- 
+let state;
+(async () => {
+  const { getGlobalStateHandler } = await import('../base-js-meta-memory/exportState.cjs');
+  state = getGlobalStateHandler();
+})();
 
 // Servidores
 app.listen(7003, () => console.log('webhook is listening 7003'));
 
 https.createServer({
- ca: fs.readFileSync('C:/Users/berna/Downloads/CERTIFICADO_API_DF1_APP/CERTIFICADO_API_DF1_APP/ca_bundle.crt'),
-      key: fs.readFileSync('C:/Users/berna/Downloads/CERTIFICADO_API_DF1_APP/CERTIFICADO_API_DF1_APP/private.key'),
-      cert: fs.readFileSync('C:/Users/berna/Downloads/CERTIFICADO_API_DF1_APP/CERTIFICADO_API_DF1_APP/certificate.crt')
+  ca: fs.readFileSync('C:/GAIA/CERTIFICADO_API_DF1_APP/ca_bundle.crt'),
+  key: fs.readFileSync('C:/GAIA/CERTIFICADO_API_DF1_APP/private.key'),
+  cert: fs.readFileSync('C:/GAIA/CERTIFICADO_API_DF1_APP/certificate.crt')
 }, app).listen(process.env.PORT, () => console.log('Puerto escuchando en ' + process.env.PORT));
 
 http.createServer({}, app).listen(189, () => console.log(' puerto escuchando en 189'));

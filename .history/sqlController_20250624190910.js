@@ -47,13 +47,11 @@ sqlController.CONSULTA_CLIENTE = async (idEmpresa) => {
 
 sqlController.CARGA_DATOS_ENCUESTA_COMPLETO = async () => {
   try {
-    let pool   = await sql.connect(sqlConfig);
+    let pool = await sql.connect(sqlConfig);
     let result = await pool.request().execute('[dbo].[SP_CARGA_DATOS_ENCUESTA_COMPLETO]');
-    // 👇 log para confirmar que vienen las preguntas con idPregunta
-    console.log('📝 Preguntas cargadas:', result.recordsets[2]);
     await sql.close();
     return {
-      saludos:   result.recordsets[0],
+      saludos: result.recordsets[0],
       contactos: result.recordsets[1],
       preguntas: result.recordsets[2]
     };
@@ -62,31 +60,43 @@ sqlController.CARGA_DATOS_ENCUESTA_COMPLETO = async () => {
     return { saludos: [], contactos: [], preguntas: [] };
   }
 };
+
 sqlController.GUARDAR_RESPUESTAS = async (req, res) => {
   const respuestas = req.body;
   if (!Array.isArray(respuestas) || respuestas.length === 0) {
     return res.status(400).json({ message: 'No se recibieron respuestas válidas.' });
   }
+  let pool;
   try {
-    const pool = await sql.connect(sqlConfig);
-    for (const item of respuestas) {
-     await pool.request()
-  .input('idContacto', sql.NVarChar, item.idContacto)
-  .input('respuesta', sql.NVarChar, item.respuesta)
-  .input('pregunta', sql.NVarChar, item.pregunta)
-  .input('tipo', sql.NVarChar, item.tipo)
-  .input('idEncuesta', sql.Int, item.idEncuesta)
-  .input('idEmpresa', sql.Int, item.idEmpresa)
-  .input('idPregunta', sql.Int, item.idPregunta) // ✅ nuevo campo
-  .execute('[dbo].[SP_INSERTAR_RESPUESTA]');
+    pool = await sql.connect(sqlConfig);
 
+    // 1) Insertar cada respuesta
+    for (const item of respuestas) {
+      await pool.request()
+        .input('idContacto', sql.NVarChar, item.idContacto)
+        .input('respuesta', sql.NVarChar, item.respuesta)
+        .input('pregunta', sql.NVarChar, item.pregunta)
+        .input('tipo', sql.NVarChar, item.tipo)
+        .input('idEncuesta', sql.Int, item.idEncuesta)
+        .input('idEmpresa', sql.Int, item.idEmpresa)
+        .input('idPregunta', sql.Int, item.idPregunta)
+        .execute('[dbo].[SP_INSERTAR_RESPUESTA]');
     }
-    return res.status(200).json({ message: '✅ Respuestas guardadas correctamente.' });
+
+    // 2) Marcar el contacto como respondido
+    const idContacto = respuestas[0].idContacto;
+    console.log('📩 Contacto ID:', idContacto);
+    await sqlController.marcarContactoRespondido(idContacto);
+
+    return res.status(200).json({ message: '✅ Respuestas guardadas y estado actualizado.' });
   } catch (err) {
     console.error('❌ Error al guardar respuestas:', err);
     return res.status(500).json({ message: '❌ Error interno del servidor.' });
+  } finally {
+    if (pool) await sql.close();
   }
 };
+
 
 sqlController.ENVIAR_RECORDATORIO = async (idEncuesta) => {
   try {
@@ -100,7 +110,7 @@ sqlController.ENVIAR_RECORDATORIO = async (idEncuesta) => {
     console.error('❌ Error en ENVIAR_RECORDATORIO:', err);
     await sql.close();
     return [];
-  }
+  } 
 };
 
 sqlController.OBTENER_CONTACTOS_PARA_RECORDATORIO = async () => {
@@ -144,5 +154,27 @@ sqlController.GESTIONAR_ESTADO_ENCUESTA = async (idEmpresa, idEncuesta, idContac
     .input('idContacto', sql.Int, idContacto)
     .execute('SP_GESTIONAR_ESTADO_ENCUESTA');
 };
+
+/**
+ * Marca un contacto como respondido en contactos.estadoEncuesta = 1
+ */
+sqlController.marcarContactoRespondido = async (idContacto) => {
+  try {
+    const pool = await sql.connect(sqlConfig);
+    await pool.request()
+      .input('idContacto', sql.BigInt, idContacto)
+      .query(`
+        UPDATE contactos
+          SET estadoEncuesta = 1
+        WHERE id = @idContacto
+      `);
+    await sql.close();
+  } catch (err) {
+    console.error('❌ Error al marcar contacto respondido:', err);
+  }
+};
+
+
+
 
 module.exports = sqlController;

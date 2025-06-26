@@ -47,13 +47,11 @@ sqlController.CONSULTA_CLIENTE = async (idEmpresa) => {
 
 sqlController.CARGA_DATOS_ENCUESTA_COMPLETO = async () => {
   try {
-    let pool   = await sql.connect(sqlConfig);
+    let pool = await sql.connect(sqlConfig);
     let result = await pool.request().execute('[dbo].[SP_CARGA_DATOS_ENCUESTA_COMPLETO]');
-    // 👇 log para confirmar que vienen las preguntas con idPregunta
-    console.log('📝 Preguntas cargadas:', result.recordsets[2]);
     await sql.close();
     return {
-      saludos:   result.recordsets[0],
+      saludos: result.recordsets[0],
       contactos: result.recordsets[1],
       preguntas: result.recordsets[2]
     };
@@ -62,6 +60,7 @@ sqlController.CARGA_DATOS_ENCUESTA_COMPLETO = async () => {
     return { saludos: [], contactos: [], preguntas: [] };
   }
 };
+
 sqlController.GUARDAR_RESPUESTAS = async (req, res) => {
   const respuestas = req.body;
   if (!Array.isArray(respuestas) || respuestas.length === 0) {

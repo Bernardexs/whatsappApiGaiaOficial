@@ -23,7 +23,11 @@ const configFile = require('./config/config.js');
 const sqlController = require('./sqlController.js');
 
 // ✅ Importación correcta del handler global desde otro proyecto (usando .cjs para CommonJS)
- 
+let state;
+(async () => {
+  const { getGlobalStateHandler } = await import('../base-js-meta-memory/exportState.cjs');
+  state = getGlobalStateHandler();
+})();
 
 // Servidores
 app.listen(7003, () => console.log('webhook is listening 7003'));
